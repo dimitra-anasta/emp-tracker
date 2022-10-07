@@ -13,9 +13,15 @@ const addDep = () => {
            name: 'addDep',
         },
     ]).then((answers) => {
+        const sql = `INSERT INTO department (name) VALUES (?)`
+        const params = [answers.addDep];
+        db.query(sql, params, (err,result) => {
+            if (err) throw err;
+            console.table(result);
+            viewAllDep();
+        })
         console.log(answers);
-    }) const sql = 
-    let answers.addDep;
+    }) 
 };
 
 const viewAllDep = () => {
