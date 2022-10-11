@@ -5,6 +5,33 @@ import inquirer from 'inquirer';
 
 let roles 
 
+const addRole = () => {
+    inquirer.prompt ([
+        {
+            type: 'input',
+            message: 'What is the role?',
+            name: 'addRole',
+        }
+    ]).then((answers) => {
+        const sql = `INSERT INTO role (title) VALUES (?)`
+        const params = [answers.addRole];
+        db.query(sql, params, (err, result) => {
+            if (err) throw err;
+            console.table(result);
+            viewAddedRoles();
+        })
+        console.log(answers);
+    }) 
+};
+
+const viewAddedRoles = () => {
+    db.query(`SELECT * FROM department222`, function (err, results){
+        if (err) throw err;
+        console.table(results);
+        promptChoices(); 
+    })
+}
+
 const addDep = () => {
     inquirer.prompt([
         {
@@ -125,6 +152,8 @@ const promptChoices = () => {
             viewAllDep()
         } if (userChoices === 'Add department'){
             addDep()
+        } if (userChoices === 'Add role'){
+            addRole()
         }
 } )};
 
