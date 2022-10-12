@@ -2,8 +2,22 @@
 // const inquirer = require('inquirer');
 import mysql from 'mysql2';
 import inquirer from 'inquirer';
+// import asciiart-logo from 'asciiart-logo';
 
+// const logo = require("asciiart-logo");
 let roles 
+let employees
+
+const db = mysql.createConnection(
+    {
+        host: 'localhost',
+        user: 'root',
+        password: 'password1',
+        database: 'employees_db'
+    },
+        console.log('Connected to the employees_db database.')
+    );
+    console.table('EMPLOYEE TRACKER');
 
 const addRole = () => {
     inquirer.prompt ([
@@ -11,26 +25,55 @@ const addRole = () => {
             type: 'input',
             message: 'What is the role?',
             name: 'addRole',
+        },
+        {
+            type: 'input',
+            message: 'What is their salary?',
+            name: 'addSalary',
+        },
+        {
+            type: 'list',
+            message: 'What is the department? Enter 1 for Sales, 3 for Engineering, 3 for Finance, 4 for Legal',
+            name: 'addDepRole',
+            choices: [1,2,3,4],
         }
+
     ]).then((answers) => {
-        const sql = `INSERT INTO role (title) VALUES (?)`
-        const params = [answers.addRole];
+        const sql = `INSERT INTO role (role.title, role.salary, role.department_id) VALUES (?,?,?);`
+        const params = [answers.addRole, answers.addSalary, answers.addDepRole];
         db.query(sql, params, (err, result) => {
             if (err) throw err;
             console.table(result);
-            viewAddedRoles();
+            viewAllRoles();
         })
         console.log(answers);
     }) 
 };
 
-const viewAddedRoles = () => {
-    db.query(`SELECT * FROM department222`, function (err, results){
-        if (err) throw err;
-        console.table(results);
-        promptChoices(); 
-    })
+// const viewAddedRoles = () => {
+//     db.query(`SELECT * FROM role`, function (err, results){
+//         if (err) throw err;
+//         console.table(results);
+//         promptChoices(); 
+//     })
+// }
+
+const getAllRoles = () => {
+    return db.promise().query(`SELECT role.id, role.title, role.salary, role.department_id FROM role JOIN department ON role.department_id = department.id`)
 }
+getAllRoles().then((results) => {
+    roles = results[0];
+    console.log(roles[0])
+});
+
+const getAllEmp = () => {
+    return db.promise().query(`SELECT * FROM employee;`)
+} 
+getAllEmp().then((r) => {
+    employees = r[0];
+    // console.log(employees[0]);
+})
+
 
 const addDep = () => {
     inquirer.prompt([
@@ -40,7 +83,7 @@ const addDep = () => {
            name: 'addDep',
         },
     ]).then((answers) => {
-        const sql = `INSERT INTO department (name) VALUES (?)`
+        const sql = `INSERT INTO department (name) VALUES (?);`
         const params = [answers.addDep];
         db.query(sql, params, (err,result) => {
             if (err) throw err;
@@ -60,23 +103,13 @@ const viewAllDep = () => {
 }
 
 const viewAllRoles = () => {
-    return db.query(`SELECT role.id, role.title, role.salary,role.department_id FROM role LEFT JOIN department ON role.department_id = department.id`, function (err, results){
+    return db.query(`SELECT role.id, role.title, role.salary, role.department_id FROM role JOIN department ON role.department_id = department.id`, function (err, results){
         if (err) throw err;
         console.table(results);
         promptChoices();
     })
 }
 
-const db = mysql.createConnection(
-{
-    host: 'localhost',
-    user: 'root',
-    password: 'password1',
-    database: 'employees_db'
-},
-    console.log('Connected to the employees_db database.')
-);
-console.table('EMPLOYEE TRACKER');
 const viewAllEmp = () => {
     // db query allows you to make requests from Javascript to sql server
     db.query(`SELECT * FROM employee`, function (err,results) {
@@ -86,7 +119,8 @@ const viewAllEmp = () => {
 }
 
 const addEmp = () => {
-
+ let firstName 
+ let lastName
     inquirer.prompt([
          {
             type: 'input',
@@ -98,24 +132,21 @@ const addEmp = () => {
             message: 'What is the employee last name?',
             name: 'last_name',
             },
-           
-            // {
-            // type: 'list',
-            // message: 'Who is the employee manager?',
-            // name: 'emp_manager',
-            // choices: ['']
-            // },
     ]).then((answers) => {
         console.log(answers);
-        let firstName = answers.first_name;
+        firstName = answers.first_name;
         console.log(firstName);
-        let lastName = answers.last_name;
+        lastName = answers.last_name;
         console.log(lastName);
+        let empManagerChoices = employees.map(({first_name, last_name, manager_id}) => ({
+            name: `${first_name} ${last_name}`,
+            value: manager_id, 
+        }))
         let roleChoices = roles.map(({id, title}) => ({
             name: title,
             value: id,
         }))
-        db.promise().query('SELECT role.title, role.salary, department.department_id FROM role LEFT JOIN department ON role.department_id = department.id')
+        db.promise().query('SELECT role.title, role.salary, role.department_id FROM role LEFT JOIN department ON role.department_id = department.id')
         inquirer.prompt([
         {
             type: 'list',
@@ -124,13 +155,38 @@ const addEmp = () => {
             choices: roleChoices
             },
         ]).then((answers) => {
-            console.log(answers);
-        
+            let roleId = answers.emp_role;
+            console.log(answers.emp_role);
+            inquirer.prompt([
+               {
+                type: 'list',
+                message:'Who is their manager?',
+                name: 'emp_manager',
+                choices: empManagerChoices,
+               },
+            ]).then((answers) => {
+    
+                console.log(roleId, 'role id')
+                console.log(answers.emp_manager)
+               let employee = {first_name: firstName, last_name: lastName, manager_id: answers.emp_manager, role_id: roleId}
+               const sql = `INSERT INTO employee SET ? ;`
+                db.query(sql, employee, (err, results) => {
+                    if (err) throw err;
+                    console.table(results);
+                    
+                })
+            }).then(()=> {
+                console.log(`employee ${firstName} ${lastName} created.`)
+            }) .then(() => {
+                viewAllEmp();  
+        })
         })
     }) 
 }
 
 const promptChoices = () => {
+// const logoText = logo({ name: "Employee Manager" }).render();
+//   console.log(logoText);
     inquirer.prompt([
         {
             type: 'list',
