@@ -2,6 +2,11 @@
 
 ![img](assets/Screen%20Shot%202022-10-13%20at%205.14.24%20PM.png)
 
+## Walk-Through Video
+
+https://drive.google.com/file/d/1HdXt6QG4M-gP5Pze0iMYhVT8x21hant5/view?usp=sharing
+
+
 ## User Story
 
 ```md
