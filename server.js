@@ -117,6 +117,26 @@ const viewAllEmp = () => {
         promptChoices(); 
     })
 }
+ 
+const updateEmpRole = () => {
+    inquirer.prompt ([
+        {
+            type: 'input',
+            message: 'What is the employee id #?',
+            name: 'emp_id'
+        },
+        {
+            type: 'input',
+            message: 'What is the employee new role id #?',
+            name: 'newEmp_id'
+        }
+    ]).then ((response) => {
+        db.query(`UPDATE employee SET role_id = ${response.newEmp_id} WHERE id = ${response.emp_id}`, function (err,results){
+            console.table(results);
+            promptChoices();
+        } )
+    })
+}
 
 const addEmp = () => {
  let firstName 
@@ -210,7 +230,9 @@ const promptChoices = () => {
             addDep()
         } if (userChoices === 'Add role'){
             addRole()
-        }
+        } if (userChoices === 'Update employee role'){
+            updateEmpRole()
+        } 
 } )};
 
 
